@@ -190,7 +190,7 @@ class UrbanRoutesPage:
     def open_comfort_flow(self):
         self._click(self.personal_option_locator)
         self._click(self.icon_taxi_locator)
-        self._click(call_taxi_button)
+        self._click(self.call_taxi_button)
         self._click(self.comfort_mode)
 
 

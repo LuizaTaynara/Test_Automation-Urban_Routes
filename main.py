@@ -49,7 +49,7 @@ class TestUrbanRoutes:
 
         assert self.page.is_comfort_selected()
 
-        time.sleep(5)
+
 
 
 
