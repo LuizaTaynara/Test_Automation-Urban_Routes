@@ -1,4 +1,7 @@
 import time
+
+from selenium.webdriver.common.devtools.v129 import page
+
 import data
 import helpers
 from pages import UrbanRoutesPage
@@ -34,21 +37,20 @@ class TestUrbanRoutes:
 
 # 1.Definir o endereço:
     def test_set_route(self):
-        assert self.driver.find_element(By.XPATH, "//div[contains(@class,'type-picker')]").is_displayed()
+
+        assert self.page.get_from_location_value() == data.ADDRESS_FROM
+        assert self.page.get_to_location_value() == data.ADDRESS_TO
+
 
 
 # 2.Selecionar o plano Comfort
     def test_select_plan(self):
-        self.page.select_personal_mode()
-        self.page.select_taxi_icon()
-        self.page.click_call_taxi()
+        self.page.open_comfort_flow()
 
-        comfort_route = self.driver.find_element(By.XPATH, "//div[contains(@class,'tcard')][.//img[@alt='Comfort']]"        )
-        # verifica se não está ativo
-        if "active" not in comfort_route.get_attribute("class"):
-            comfort_route.click()
-        # valida que está selecionado
-        assert "active" in comfort_route.get_attribute("class")
+        assert self.page.is_comfort_selected()
+
+        time.sleep(5)
+
 
 
 # 3.Preencher o número de telefone
@@ -60,75 +62,58 @@ class TestUrbanRoutes:
         self.page.fill_code(code)
         self.page.confirm_code()
 
+        assert self.page.is_phone_confirmed()
+
+         #roda mas da erro no fim
 
 # 4.Adicionar um cartão de crédito
     def test_fill_card(self):
         self.page.open_comfort_flow()
+        self.page.complete_payment_flow(data.CARD_NUMBER, data.CARD_CODE)
 
-        self.page.click_payment_method()
-        self.page.click_add_card()
-
-        self.page.fill_card_number_and_code(data.CARD_NUMBER,data.CARD_CODE)
-
-        # clique fora para ativar o botão)
-        self.page.click_outside()
-
-        # Clica no botão "Adicionar"
-        self.page.click_add_button()
-        self.page.close_flow_card_button
-
+        assert self.page.is_card_added()
+        #roda mas da erro no fim
 
 # 5.Escrever um comentário para o motorista;
     def test_comment_for_driver(self):
         self.page.open_comfort_flow()
         self.page.add_comment(data.MESSAGE_FOR_DRIVER)
 
+        assert self.page.is_comment_added()
+        #roda mas da erro no fim
 
 # 6.Pedir um cobertor e lenços
     def test_order_blanket_and_handkerchiefs(self):
         self.page.open_comfort_flow()
         self.page.toggle_blanket_and_tissues()
 
+        assert self.page.is_blanket_selected()
+         #roda mas da erro no fim
+
 
 # 7.Pedir 2 sorvetes;
     def test_order_2_ice_creams(self):
         self.page.open_comfort_flow()
         self.page.add_ice_cream(2)
+
+        assert self.page.get_ice_cream_count() == 2
+
         time.sleep(3)
+        # roda mas da erro no fim
 
 # 8.Pedir um táxi com a tarifa "Comfort".
     def test_car_search_model_appears(self):
         self.page.open_comfort_flow()
+
         self.page.fill_phone_flow_complete(data.PHONE_NUMBER)
-
-        self.page.click_payment_method()
-        self.page.click_add_card()
-
-        self.page.fill_card_number_and_code(data.CARD_NUMBER, data.CARD_CODE)
-
-        # clique fora para ativar o botão)
-        self.page.click_outside()
-
-        # Clica no botão "Adicionar"
-        self.page.click_add_button()
-        self.page.close_flow_card_button
-        self.driver.implicitly_wait(5)
         self.page.add_comment(data.MESSAGE_FOR_DRIVER)
-        self.wait_overlay_disappear()
-
+        self.page.add_ice_cream(2)
         self.page.toggle_blanket_and_tissues()
-        time.sleep(3)
 
+        self.page.complete_payment_flow(data.CARD_NUMBER,data.CARD_CODE)
+        self.page.order_taxi()
 
-
-
-
-
-
-
-
-
-
+        time.sleep(5)
 
     @classmethod
     def teardown_class(cls):
