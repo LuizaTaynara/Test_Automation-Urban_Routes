@@ -30,20 +30,22 @@ class UrbanRoutesPage:
     submit_phone = (By.XPATH, "//button[@type='submit' and text()='Próximo']")
     confirm_phone_button = (By.XPATH, "//button[@type='submit' and text()='Confirmar']")
 
-    payment_button = (By.XPATH, "//div[contains(text(),'Método de pagamento')]")
+    payment_button = (By.XPATH, "//div[contains(@class,'pp-text') and contains(.,'Método de pagamento')]")
     add_card_button = (By.XPATH, "//div[contains(@class,'pp-plus-container')]")
     card_number = (By.XPATH, "//input[@placeholder='1234 0000 4321']")
     card_code = (By.XPATH, "//input[@placeholder='12']")
     add_button = (By.XPATH, "//button[text()='Adicionar']")
     outside_area = (By.CSS_SELECTOR, "body")
-    close_flow_card_button = (By.XPATH, "//button[contains(@class,'section-close')]")
+    close_flow_card_button = (By.CSS_SELECTOR, ".payment-picker .section.active button.close-button.section-close")
 
 
     comment_input = (By.ID, "comment")
 
-    blanket_toggle = (By.XPATH, "//span[contains(@class,'slider')]/..")
+    blanket_toggle = (By.CSS_SELECTOR, "div.switch")
 
     order_ice_cream = (By.XPATH, "//div[@class='counter-plus']")
+    counter_value = (By.XPATH, "//div[@class='counter-value']")
+
 
 # essencials actions
 
@@ -133,6 +135,14 @@ class UrbanRoutesPage:
 
 #3
 
+    def fill_phone_number_complete(page, driver):
+        self.fill_phone_flow(data.PHONE_NUMBER)
+        code = helpers.retrieve_phone_code(self.driver)
+        self.fill_code(code)
+        self.confirm_code()
+
+        return page.is_phone_confirmed()
+
     def fill_phone_flow(self, phone):
         self._click(self.number_locator)
         self._type(self.phone_input, phone)
@@ -142,12 +152,15 @@ class UrbanRoutesPage:
     def fill_code(self, code):
         self._type(self.code_phone_input, code)
 
+    def is_phone_confirmed(self):
+        return len(self.driver.find_elements(*self.confirm_phone_button)) > 0
+
     def confirm_code(self):
         self._click(self.confirm_phone_button)
 
 #4
     def click_payment_method(self):
-        element=WebDriverWait(self.driver, 15).until(
+        element = WebDriverWait(self.driver, 15).until(
             EC.presence_of_element_located(self.payment_button)
         )
         self.driver.execute_script("arguments[0].scrollIntoView(true);", element)
@@ -165,26 +178,55 @@ class UrbanRoutesPage:
             EC.element_to_be_clickable(self.add_button)
         ).click()
 
-    def close_flow_card(self):
-        try:
-            self._click(self.close_flow_card_button)
-        except:
-            pass
+    def click_outside_area(self):
+        WebDriverWait(self.driver, 5).until(
+            EC.element_to_be_clickable(self.outside_area)
+    ).click()
+
+    def flow_card_fished(self):
+        element = WebDriverWait(self.driver, 5).until(
+            EC.presence_of_element_located(self.close_flow_card_button)
+        )
+        self.driver.execute_script("arguments[0].click();", element)
+
+    def is_card_added(self):
+        return WebDriverWait(self.driver, 2).until(
+            EC.presence_of_element_located((By.XPATH, "//*[contains(text(),'Cartão')]"))
+        )
 
 #5
-
     def add_comment(self, text):
         self._type(self.comment_input, text)
 
+    def is_comment_added(self, expected_text):
+        element = self.driver.find_element(By.ID, "comment")
+        value = element.get_attribute("value")
+        return value == expected_text
+
 #6
     def toggle_blanket_and_tissues(self):
-        self._click(self.blanket_toggle)
+        element = WebDriverWait(self.driver, 10).until(
+            EC.element_to_be_clickable((By.CSS_SELECTOR, "div.switch"))
+        )
+
+        self.driver.execute_script("arguments[0].click();", element)
+
+    def is_blanket_selected(self):
+        element = self.driver.find_element(By.CSS_SELECTOR, "input.switch-input")
+        return element.is_selected()
 
 
 #7
     def add_ice_cream(self, quantity):
         for count in range(quantity):
             self._click(self.order_ice_cream)
+            time.sleep(1)
+
+    def get_ice_cream_count(self):
+        element = self.driver.find_element(*self.counter_value)
+        return int(element.text)
+
+
 
 #8
     def open_comfort_flow(self):
@@ -205,16 +247,15 @@ class UrbanRoutesPage:
 
 
     def complete_payment_flow(self, number, code):
-        self._click(self.payment_button)
-        self._click(self.add_card_button)
+        self.click_payment_method()
+        self.click_add_card()
+        self.fill_card_number_and_code(data.CARD_NUMBER, data.CARD_CODE)
+        self.click_outside_area()
+        self.click_add_button()
+        time.sleep(2)
+        self.flow_card_fished()
 
-        self._type(self.card_number, number)
-        self._type(self.card_code, code)
 
-        self.click_outside()
-        self.driver.find_element(*self.add_button).click()
-        self.click(self.close_flow_card_button)
-        time.sleep(3)
 
 
     def complete_order_flow(self, phone, card_number, card_code, comment):
@@ -226,7 +267,17 @@ class UrbanRoutesPage:
         time.sleep(3)
 
 
+    def click_order_button(self):
+        self.driver.find_element(
+            By.XPATH,
+            "//button[.//span[text()='Pedir']]"
+        ).click()
 
+    def is_search_car_visible(self):
+        return self.driver.find_element(
+            By.XPATH,
+            "//div[@class='order-header-title']"
+        ).is_displayed()
 
 
 

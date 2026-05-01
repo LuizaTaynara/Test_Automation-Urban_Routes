@@ -51,44 +51,40 @@ class TestUrbanRoutes:
 
 
 
-
-
 # 3.Preencher o número de telefone
     def test_fill_phone_number(self):
         self.page.open_comfort_flow()
         self.page.fill_phone_flow(data.PHONE_NUMBER)
-
         code = helpers.retrieve_phone_code(self.driver)
         self.page.fill_code(code)
         self.page.confirm_code()
 
         assert self.page.is_phone_confirmed()
 
-         #roda mas da erro no fim
 
 # 4.Adicionar um cartão de crédito
     def test_fill_card(self):
         self.page.open_comfort_flow()
-        self.page.complete_payment_flow(data.CARD_NUMBER, data.CARD_CODE)
+        self.page.complete_payment_flow(data.CARD_NUMBER,data.CARD_CODE)
 
         assert self.page.is_card_added()
-        #roda mas da erro no fim
+
 
 # 5.Escrever um comentário para o motorista;
     def test_comment_for_driver(self):
         self.page.open_comfort_flow()
         self.page.add_comment(data.MESSAGE_FOR_DRIVER)
 
-        assert self.page.is_comment_added()
-        #roda mas da erro no fim
+        assert self.page.is_comment_added(data.MESSAGE_FOR_DRIVER)
+
 
 # 6.Pedir um cobertor e lenços
-    def test_order_blanket_and_handkerchiefs(self):
+    def test_order_toggle_blanket_and_tissues(self):
         self.page.open_comfort_flow()
         self.page.toggle_blanket_and_tissues()
 
         assert self.page.is_blanket_selected()
-         #roda mas da erro no fim
+
 
 
 # 7.Pedir 2 sorvetes;
@@ -98,22 +94,23 @@ class TestUrbanRoutes:
 
         assert self.page.get_ice_cream_count() == 2
 
-        time.sleep(3)
-        # roda mas da erro no fim
+
 
 # 8.Pedir um táxi com a tarifa "Comfort".
     def test_car_search_model_appears(self):
         self.page.open_comfort_flow()
-
-        self.page.fill_phone_flow_complete(data.PHONE_NUMBER)
+        self.page.fill_phone_flow(data.PHONE_NUMBER)
+        code = helpers.retrieve_phone_code(self.driver)
+        self.page.fill_code(code)
+        self.page.confirm_code()
+        time.sleep(1)
+        self.page.complete_payment_flow(data.CARD_NUMBER,data.CARD_CODE)
         self.page.add_comment(data.MESSAGE_FOR_DRIVER)
         self.page.add_ice_cream(2)
         self.page.toggle_blanket_and_tissues()
+        self.page.click_order_button()
 
-        self.page.complete_payment_flow(data.CARD_NUMBER,data.CARD_CODE)
-        self.page.order_taxi()
-
-        time.sleep(5)
+        assert self.page.is_search_car_visible()
 
     @classmethod
     def teardown_class(cls):
